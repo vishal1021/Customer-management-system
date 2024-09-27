@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Search Customer</h2>
+<form method="POST">
+    <label for="customer_id">Customer ID:</label>
+    <input type="text" name="customer_id" required>
+    <button type="submit">Search</button>
+</form>
+
+{% if customer %}
+    <h3>Customer Details</h3>
+    <p>ID: {{ customer[0] }}</p>
+    <p>Name: {{ customer[1] }}</p>
+    <p>Address: {{ customer[2] }}</p>
+    <p>Mobile No: {{ customer[3] }}</p>
+    <p>Age: {{ customer[4] }}</p>
+{% elif customer is not none %}
+    <p>No customer found.</p>
+{% endif %}
+{% endblock %}

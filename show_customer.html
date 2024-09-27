@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Customer List</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Mobile No</th>
+        <th>Age</th>
+        <th>Action</th>
+    </tr>
+    {% for customer in customers %}
+    <tr>
+        <td>{{ customer[0] }}</td>
+        <td>{{ customer[1] }}</td>
+        <td>{{ customer[2] }}</td>
+        <td>{{ customer[3] }}</td>
+        <td>{{ customer[4] }}</td>
+        <td>
+            <form method="POST" action="{{ url_for('delete_customer') }}">
+                <input type="hidden" name="customer_id" value="{{ customer[0] }}">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

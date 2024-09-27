@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Customer Management</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Customer Management System</h1>
+
+        <h2>Add Customer</h2>
+        <form id="addCustomerForm" class="mb-4">
+            <div class="form-group">
+                <input type="text" id="name" class="form-control" placeholder="Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="address" class="form-control" placeholder="Address" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="mobile_no" class="form-control" placeholder="Mobile No" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="age" class="form-control" placeholder="Age" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Customer</button>
+        </form>
+        <p id="addCustomerResult" class="text-success"></p>
+
+        <h2>Customer List</h2>
+        <button id="loadCustomers" class="btn btn-info mb-2">Load Customers</button>
+        <div id="customersList" class="mb-4"></div>
+
+        <h2>Search Customer by ID</h2>
+        <form id="searchCustomerForm" class="mb-4">
+            <div class="form-group">
+                <input type="number" id="customer_id" class="form-control" placeholder="Customer ID" required>
+            </div>
+            <button type="submit" class="btn btn-success">Search Customer</button>
+        </form>
+        <p id="searchResult" class="text-warning"></p>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Add customer
+            $('#addCustomerForm').on('submit', function(e) {
+                e.preventDefault();
+                const customerData = {
+                    name: $('#name').val(),
+                    address: $('#address').val(),
+                    mobile_no: $('#mobile_no').val(),
+                    age: $('#age').val()
+                };
+                $.ajax({
+                    url: '/add_customer',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(customerData),
+                    success: function(response) {
+                        $('#addCustomerResult').text(response.message);
+                        $('#addCustomerForm')[0].reset(); // Reset the form
+                    }
+                });
+            });
+
+            // Load customers
+            $('#loadCustomers').on('click', function() {
+                $.ajax({
+                    url: '/get_customers',
+                    type: 'GET',
+                    success: function(customers) {
+                        let customerHTML = '<table class="table table-striped"><thead><tr><th>ID</th><th>Name</th><th>Address</th><th>Mobile No</th><th>Age</th></tr></thead><tbody>';
+                        customers.forEach(function(customer) {
+                            customerHTML += `<tr>
+                                <td>${customer[0]}</td>
+                                <td>${customer[1]}</td>
+                                <td>${customer[2]}</td>
+                                <td>${customer[3]}</td>
+                                <td>${customer[4]}</td>
+                                <td><button class="btn btn-warning btn-sm edit-button" data-id="${customer[0]}">Edit</button></td>
+                            </tr>`;
+                        });
+                        customerHTML += '</tbody></table>';
+                        $('#customersList').html(customerHTML);
+                        addEditButtonListener(); // Rebind edit button event
+                    }
+                });
+            });
+
+            // Search customer by ID
+            $('#searchCustomerForm').on('submit', function(e) {
+                e.preventDefault();
+                const customerID = $('#customer_id').val();
+                $.ajax({
+                    url: '/search_customer',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ customer_id: customerID }),
+                    success: function(response) {
+                        if (response.message) {
+                            $('#searchResult').text(response.message);
+                        } else {
+                            $('#searchResult').html(`ID: ${response[0]}, Name: ${response[1]}, Address: ${response[2]}, Mobile No: ${response[3]}, Age: ${response[4]}`);
+                        }
+                    }
+                });
+            });
+
+            // Function to add click event listener to edit buttons
+            function addEditButtonListener() {
+                $('.edit-button').on('click', function() {
+                    const customerId = $(this).data('id');
+                    $.ajax({
+                        url: '/search_customer',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ customer_id: customerId }),
+                        success: function(customer) {
+                            if (customer) {
+                                $('#name').val(customer[1]);
+                                $('#address').val(customer[2]);
+                                $('#mobile_no').val(customer[3]);
+                                $('#age').val(customer[4]);
+                                $('#addCustomerForm').off('submit').on('submit', function(e) {
+                                    e.preventDefault();
+                                    const updatedData = {
+                                        id: customerId,
+                                        name: $('#name').val(),
+                                        address: $('#address').val(),
+                                        mobile_no: $('#mobile_no').val(),
+                                        age: $('#age').val()
+                                    };
+                                    $.ajax({
+                                        url: '/update_customer',
+                                        type: 'POST',
+                                        contentType: 'application/json',
+                                        data: JSON.stringify(updatedData),
+                                        success: function(response) {
+                                            $('#addCustomerResult').text(response.message);
+                                            $('#addCustomerForm')[0].reset(); // Reset the form
+                                            $('#loadCustomers').click(); // Reload customers
+                                        }
+                                    });
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
